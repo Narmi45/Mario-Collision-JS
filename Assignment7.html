@@ -1,0 +1,588 @@
+<head>
+	<title>Assignment 7</title>
+	<meta charset="UTF-8">
+</head>
+<body>
+<br>
+<canvas id="canvas" width="1500" height="600" style="border:1px solid #cccccc;"></canvas>
+
+<script type="text/javascript">
+
+let canvasScreen = document.querySelector("canvas");
+let context = canvasScreen.getContext("2d");
+
+class Sprite
+{
+	constructor(x, y, w, h, z)
+	{
+		this.x = x;
+		this.y = y;
+        this.w = w;
+        this.h = h;
+		this.z = z; // Brick Coin Indicator
+
+	}
+
+    loadImages(file_name)
+    {
+		this.__proto__.image = new Image();
+        this.__proto__.image.src  = file_name;
+    }
+
+	imageAnimation(file_name)
+	{
+		let imageTemp = new Image()
+		imageTemp.src = file_name;
+		return imageTemp
+	}
+}
+
+class Model
+{
+	constructor()
+	{
+		this.__proto__.camerapos = 500;
+        this.mario = new Mario(this.__proto__.camerapos, 20);
+		this.sprites = [];
+		this.sprites.push(new Background(-1000,0));
+		this.sprites.push(new Ground(-1000, 495));
+        this.sprites.push(this.mario);
+        this.sprites.push(new Brick(600, 150, 1));
+		this.sprites.push(new Brick(900, 100, 1));
+		this.sprites.push(new Brick(1250, 300, 1));
+
+		this.sprites.push(new Brick(200, 150, 2));
+		this.sprites.push(new Brick(-100, 100, 2));
+		this.sprites.push(new Brick(1650, 150, 2));
+
+		//this.sprites.push(new Coin(600, 100));
+        //this.sprites.push(new Brick(x, y)); //same statement change x y		
+	}
+
+	CoinDeleter()
+	{
+		for(let i = 1; i < this.sprites.length; i++)
+			{
+				if(this.sprites[i].type === "Coin" && this.sprites[i].y >= 650)
+				{
+					this.sprites.splice(i, 1);
+					console.log("POPPED");
+					console.log(this.sprites);
+					
+				}
+			}
+	}
+
+	update()
+	{
+		this.sprites.forEach(sprite => {
+			sprite.update();
+		});
+
+		for(let i = 1; i < this.sprites.length; i++)
+		{
+			if(this.sprites[i].type === "Brick")
+			{
+				if(this.checkCollisions(this.mario, this.sprites[i]))
+				{
+					this.collisionGetOut(this.mario, this.sprites[i])
+				}
+				
+			}
+		}
+		this.CoinDeleter();
+		
+		// console.log("MarioRight, BrickLeft");
+		// console.log(this.mario.x + this.mario.width, this.sprites[1].x);
+		
+	}
+
+    checkCollisions(collider1, collider2)
+    {
+		// console.log("Collider1Right, Collider2Left: ");
+		// console.log(collider1.x + collider1.width, collider2.x);
+		let Collider1Left =  collider1.x;
+		let Collider1Right = collider1.x + collider1.w;
+		let Collider2Left = collider2.x;
+		let Collider2Right = collider2.x + collider2.w;
+
+		let Collider1Top =  collider1.y;
+		let Collider1Bot = collider1.y + collider1.h;
+		let Collider2Top = collider2.y;
+		let Collider2Bot = collider2.y + collider2.h;
+
+		// console.log("Brick: " );
+		// console.log(Collider2Left, Collider2Top, collider2.w, collider2.h);
+		// console.log(collider2.x, collider2.y, collider2.w, collider2.h);
+
+		// console.log("Mario: ")
+		// console.log(Collider1Left, Collider1Top, collider1.w, collider1.h);
+		// console.log(collider1.x, collider1.y, collider1.w, collider1.h);
+
+		if (Collider1Right < Collider2Left || Collider1Left > Collider2Right || Collider1Bot < Collider2Top || Collider1Top > Collider2Bot)
+		{	
+			
+			//console.log("COLLISION IS FALSE");
+			return false;
+		}
+		else
+		{
+			//console.log("COLLISION IS TRUE");
+			return true;
+		}
+
+	}
+
+	collisionGetOut(collider1, collider2)
+	{
+		let Collider1Left =  collider1.x;
+		let Collider1Right = collider1.x + collider1.w;
+		let Collider2Left = collider2.x;
+		let Collider2Right = collider2.x + collider2.w;
+
+		let Collider1Top =  collider1.y;
+		let Collider1Bot = collider1.y + collider1.h;
+		let Collider2Top = collider2.y;
+		let Collider2Bot = collider2.y + collider2.h;
+
+		let int_x = 0;
+		let int_y = 0;
+
+		let CollisionTop = false;
+		if(Collider1Bot >= Collider2Top && Collider1Top <= Collider2Top)
+		{
+			CollisionTop = true;
+			//console.log("Top Collision");
+		}
+		else
+		{
+			CollisionTop = false;
+		}
+
+		let CollisionBot = false;
+		if(Collider1Top <= Collider2Bot && Collider1Bot >= Collider2Bot)
+		{
+			CollisionBot = true;
+			//console.log("Bot Collision");
+		}
+		else
+		{
+			CollisionBot = false;
+		}
+
+		let CollisionRight = false;
+		if(Collider1Left < Collider2Right && Collider1Right >= Collider2Right)
+		{
+			CollisionRight = true;
+			//console.log("Right Collision");
+		}
+		else
+		{
+			CollisionRight = false;
+		}
+
+		let CollisionLeft = false;
+		if(Collider1Right > Collider2Left && Collider1Left <= Collider2Left)
+		{
+			CollisionLeft = true;
+			//console.log("Left Collision");
+		}
+		else
+		{
+			CollisionLeft = false;
+		}
+
+		let CornerRightTop = false;
+		if(CollisionRight && CollisionTop)
+		{
+			CornerRightTop = true;
+		}
+		else
+		{
+			CornerRightTop = false;
+		}
+
+		let CornerRightBot = false;
+		if(CollisionRight && CollisionBot)
+		{
+			CornerRightBot = true;
+		}
+		else
+		{
+			CornerRightBot = false;
+		}
+
+		let CornerLeftTop = false;
+		if(CollisionLeft && CollisionTop)
+		{
+			CornerLeftTop = true;
+		} 
+		else
+		{
+			CornerLeftTop = false;
+		}
+
+		let CornerLeftBot = false;
+		if(CollisionLeft && CollisionBot)
+		{
+			CornerLeftBot = true;
+		} 
+		else
+		{
+			CornerLeftBot = false;
+		}
+
+		//
+
+		if(CollisionRight && (Collider1Bot < Collider2Bot && Collider1Top > Collider2Top))
+		{
+			CollisionRight = true;
+		}
+		
+		else if(CollisionLeft && (Collider1Bot < Collider2Bot && Collider1Top > Collider2Top))
+		{
+			CollisionLeft = true;
+		}
+
+		else if(CollisionTop && (Collider1Left > Collider2Left && Collider1Right < Collider2Right))
+		{
+			CollisionTop = true;
+		}
+
+		else if(CollisionBot && (Collider1Left > Collider2Left && Collider1Right < Collider2Right))
+		{
+			CollisionBot = true;
+			//console.log("Bot Collision");
+		}
+
+		//
+
+		else if(CornerRightBot)
+			{
+				int_x = Collider2Right - Collider1Left;
+				int_y = Collider2Bot - Collider1Top;
+				CollisionRight = (int_x < int_y);
+				CollisionBot = (int_x >= int_y);
+				//console.log(CollisionRight, CollisionBot);
+				
+			}
+		
+		else if(CornerLeftBot)
+		{
+			int_x = Math.abs(Collider2Left - Collider1Right);
+			int_y = Collider2Bot - Collider1Top;
+			CollisionLeft = (int_x < int_y);
+			CollisionBot = (int_x >= int_y);
+		}
+
+		else if(CornerRightTop)
+		{
+			int_x = Collider2Right - Collider1Left;
+			int_y = Math.abs(Collider2Top - Collider1Bot);
+			CollisionRight = (int_x < int_y);
+			CollisionTop = (int_x >= int_y);
+		}
+
+		else if(CornerLeftTop)
+		{
+			int_x = Math.abs(Collider2Left - Collider1Right);
+			int_y = Math.abs(Collider2Top - Collider1Bot);
+			CollisionLeft = (int_x < int_y);
+			CollisionTop = (int_x >= int_y);
+		}
+		
+		else
+		{
+			CollisionRight = false;
+			CollisionLeft = false;
+			CollisionBot = false;
+			CollisionTop = false;
+		}
+
+		//ACTUAL COLLIISION MATH / (GET OUT OF BLOCK CONDITIONAL STATEMENTS  AND MATH)
+		if(CollisionLeft)
+		{
+			collider1.x = Collider2Left - collider1.w;
+			this.__proto__.camerapos = Collider2Left - collider1.w;
+		}
+
+		if(CollisionRight)
+		{
+			collider1.x = Collider2Right;
+			this.__proto__.camerapos = Collider2Right;
+		}
+
+		if(CollisionTop)
+		{
+			collider1.y = Collider2Top - collider1.h;
+			this.mario.vert_velocity = 0;
+			this.mario.CounterJ = 0;
+		}
+		if(CollisionBot)
+		{
+			collider1.y = Collider2Bot;
+			this.mario.vert_velocity = 100;
+			//console.log("COLLISION BOT");
+			
+			// console.log(this.sprites[3].z);
+			if(collider2.z == 2)
+			{
+			// console.log(this.sprites[3].z);
+			//console.log("WORKS");
+			this.sprites.push(new Coin(collider2.x, collider2.y, collider2.w, collider2.h));
+			collider2.totalCoins--;
+			console.log(this.sprites);
+			}
+		}
+	}
+}
+
+class Mario extends Sprite
+{
+    constructor(x, y)
+    {
+        super(x, y, 60, 95);
+        this.__proto__.fixedPosition = 650;
+        this.type = "Mario"
+
+        this.loadImages("mario1.png");
+
+        this.vert_velocity = 0;
+		this.CounterJ = 0;
+
+		this.imageNum = 3;
+		this.images = [];
+		this.images[0] = this.imageAnimation("mario1.png");
+		this.images[1] = this.imageAnimation("mario2.png");
+		this.images[2] = this.imageAnimation("mario3.png");
+		this.images[3] = this.imageAnimation("mario4.png");
+		this.images[4] = this.imageAnimation("mario5.png");
+    }
+
+    draw()
+    {
+        context.drawImage(this.images[this.imageNum], this.fixedPosition, this.y, this.w, this.h);
+    }
+
+	updateImageNum()
+    {
+        this.imageNum++;
+        if(this.imageNum > 4)
+            this.imageNum = 0;
+    }
+
+    update()
+    {        
+        this.vert_velocity += 2.1;   //Gravity
+        this.y += this.vert_velocity;     //Update Position
+        if(this.y > 400)
+        {
+            this.vert_velocity = 0;
+            this.y = 400;
+			this.CounterJ = 0
+        }
+		else{
+			this.CounterJ++;
+		}
+    }
+}
+
+class Brick extends Sprite
+{
+    constructor(x, y, z){ 
+        super(x, y, 200, 200, z);
+        
+        this.type = "Brick";
+		this.totalCoins = 5;
+    }
+
+    draw()
+    {
+		if(this.z == 1)
+		{
+			this.loadImages("brick.png");
+			context.drawImage(this.__proto__.image, this.x - Model.prototype.camerapos + Mario.prototype.fixedPosition, this.y, this.w, this.h);
+		}
+		else if(this.z == 2)
+		{
+			this.loadImages("block1.png");
+			context.drawImage(this.__proto__.image, this.x - Model.prototype.camerapos + Mario.prototype.fixedPosition, this.y, this.w, this.h);
+			
+			if(this.totalCoins <= 0)
+			{
+				this.z = 3;
+				this.loadImages("block2.png")
+				context.drawImage(this.__proto__.image, this.x - Model.prototype.camerapos + Mario.prototype.fixedPosition, this.y, this.w, this.h);
+			}
+		}
+		else if(this.z == 3)
+		{
+			this.loadImages("block2.png")
+			context.drawImage(this.__proto__.image, this.x - Model.prototype.camerapos + Mario.prototype.fixedPosition, this.y, this.w, this.h);
+		}
+        
+		
+    }
+
+    update()
+    {
+    }
+}
+
+class Coin extends Sprite
+{
+    constructor(x, y){ 
+		super(x, y, 200, 200);
+		this.loadImages("coin.png");
+        this.type = "Coin";
+		this.max = 25;
+		this.min = -25;
+		this.range = this.max - this.min;
+		this.hor_velocity = (Math.random() * this.range) + this.min;
+		this.vert_velocity = -20;
+    }
+
+	draw()
+	{
+		context.drawImage(this.__proto__.image, this.x - Model.prototype.camerapos + Mario.prototype.fixedPosition, this.y, this.w, this.h);
+	}
+
+	update()
+	{
+		this.x += this.hor_velocity;
+		this.vert_velocity += 2.1;
+		this.y += this.vert_velocity;
+	}
+}
+
+class Background extends Sprite
+{
+	constructor(x, y){
+		super(x, y, 10000, canvasScreen.height);
+		this.loadImages("background.png");
+        this.type = "Background";
+	}
+
+	draw()
+	{
+		context.drawImage(this.__proto__.image, this.x - Model.prototype.camerapos/4 + Mario.prototype.fixedPosition, this.y, this.w, this.h);
+	}
+
+	update()
+	{
+	}
+	
+}
+
+class Ground extends Sprite
+{
+	constructor(x, y){
+		super(x, y, 10000, 100);
+		this.loadImages("ground.png");
+        this.type = "Ground";
+	}
+
+	draw()
+	{
+		context.drawImage(this.__proto__.image, this.x - Model.prototype.camerapos + Mario.prototype.fixedPosition, this.y, this.w, this.h);
+	}
+
+	update()
+	{
+	}
+	
+}
+
+class View
+{
+	constructor(model)
+	{
+        this.model = model;
+	}
+
+	update()
+	{
+        context.clearRect(0, 0, canvasScreen.width, canvasScreen.height);
+        this.model.sprites.forEach(sprite => {sprite.draw()
+            
+        });
+
+	}
+}
+
+class Controller
+{
+	constructor(model, view)
+	{
+		this.model = model;
+		this.view = view;
+		this.key_right = false;
+		this.key_left = false;
+		this.key_up = false;
+
+		let self = this;
+
+		document.addEventListener('keydown', function(event) { self.keyDown(event); }, false);
+		document.addEventListener('keyup', function(event) { self.keyUp(event); }, false);
+    }
+
+
+	keyDown(event)
+	{
+		if(event.keyCode == 39)      this.key_right = true;
+		else if(event.keyCode == 37) this.key_left = true;
+		else if(event.keyCode == 32) this.key_up = true;
+	}
+
+	keyUp(event)
+	{
+		if(event.keyCode == 39)      this.key_right = false;
+		else if(event.keyCode == 37) this.key_left = false;
+		else if(event.keyCode == 32) this.key_up = false;
+	}
+
+	update()
+	{
+		if(this.key_right)
+        {
+            this.model.mario.x += 10;
+            this.model.__proto__.camerapos += 10;
+			this.model.mario.updateImageNum();
+        }
+        
+		if(this.key_left)
+        {
+            this.model.mario.x -= 10;
+            this.model.__proto__.camerapos -= 10;
+			this.model.mario.updateImageNum();
+        }
+		if(this.key_up && this.model.mario.CounterJ <= 4)
+        {
+            this.model.mario.y -= 75;
+        }
+	}
+}
+
+class Game
+{
+	constructor()
+	{
+		this.model = new Model();
+		this.view = new View(this.model);
+		this.controller = new Controller(this.model, this.view);
+	}
+
+	onTimer()
+	{
+		this.controller.update();
+		this.model.update();
+		this.view.update();
+	}
+}
+	
+
+let game = new Game();
+let timer = setInterval(function() { game.onTimer(); }, 40);
+
+</script>
+</body>
